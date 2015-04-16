@@ -136,7 +136,7 @@
 - (void)addAnnotations:(NSArray *)annotations withCompletionHandler:(void (^)())completionHandler
 {
     [self cancelAllClusterOperations];
-    
+	  
     [self.allAnnotations addObjectsFromArray:annotations];
     
     [self.backgroundQueue addOperationWithBlock:^{
@@ -174,7 +174,7 @@
     [self cancelAllClusterOperations];
     
     CCHMapClusterOperation *operation = [[CCHMapClusterOperation alloc] initWithMapView:self.mapView
-                                                                               cellSize:self.cellSize
+                                                                               clusterSize:self.cellSize
                                                                            marginFactor:self.marginFactor
                                                         reuseExistingClusterAnnotations:self.reuseExistingClusterAnnotations
                                                               maxZoomLevelForClustering:self.maxZoomLevelForClustering
@@ -185,7 +185,7 @@
     operation.animator = self.animator;
     operation.clusterControllerDelegate = self.delegate;
     operation.clusterController = self;
-    operation.clusterMethod = ClusterMethodDistanceBased;
+	//operation.clusterMethod = ClusterMethodDistanceBased;
     
     if (completionHandler) {
         operation.completionBlock = ^{
@@ -286,10 +286,18 @@
     // Deselect all annotations when zooming in/out. Longitude delta will not change
     // unless zoom changes (in contrast to latitude delta).
     BOOL hasZoomed = !fequal(mapView.region.span.longitudeDelta, self.regionSpanBeforeChange.longitudeDelta);
+
+	
     if (hasZoomed) {
         [self deselectAllAnnotations];
     }
-    
+
+	
+	// 4/13/15  don't re-calc clusters if merely panning
+	if (!hasZoomed)
+		return;
+	
+	
     // Update annotations
     [self updateAnnotationsWithCompletionHandler:^{
         if (self.annotationToSelect) {

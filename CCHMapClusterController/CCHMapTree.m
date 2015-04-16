@@ -71,7 +71,7 @@
     
     NSMutableSet *mutableAnnotations = self.mutableAnnotations;
     for (id<MKAnnotation> annotation in annotations) {
-        if (![mutableAnnotations containsObject:annotation]) {
+		if (![mutableAnnotations containsObject:annotation]) { // && mutableAnnotations.count < 50) {
             CCHMapTreeNodeData data = CCHMapTreeNodeDataMake(annotation.coordinate.latitude, annotation.coordinate.longitude, (__bridge void *)annotation);
             if (CCHMapTreeNodeInsertData(_root, data, (int)_nodeCapacity)) {
                 updated = YES;
