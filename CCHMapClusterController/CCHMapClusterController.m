@@ -136,7 +136,7 @@
 - (void)addAnnotations:(NSArray *)annotations withCompletionHandler:(void (^)())completionHandler
 {
     [self cancelAllClusterOperations];
-    
+	  
     [self.allAnnotations addObjectsFromArray:annotations];
     
     [self.backgroundQueue addOperationWithBlock:^{
@@ -185,7 +185,7 @@
     operation.animator = self.animator;
     operation.clusterControllerDelegate = self.delegate;
     operation.clusterController = self;
-    operation.clusterMethod = ClusterMethodDistanceBased;
+	operation.clusterMethod = ClusterMethodDistanceBased;
     
     if (completionHandler) {
         operation.completionBlock = ^{
@@ -286,16 +286,29 @@
     // Deselect all annotations when zooming in/out. Longitude delta will not change
     // unless zoom changes (in contrast to latitude delta).
     BOOL hasZoomed = !fequal(mapView.region.span.longitudeDelta, self.regionSpanBeforeChange.longitudeDelta);
+
+	
     if (hasZoomed) {
         [self deselectAllAnnotations];
     }
-    
+
+	
+	// 4/13/15  don't re-calc clusters if merely panning
+	if (!hasZoomed)
+		return;
+	
+	MKCoordinateSpan currentSpan = mapView.region.span;
+	double lat = currentSpan.latitudeDelta;
+	double lon = currentSpan.longitudeDelta;
+	NSLog(@"current: %f %f", lat, lon);
+	
     // Update annotations
     [self updateAnnotationsWithCompletionHandler:^{
         if (self.annotationToSelect) {
             // Map has zoomed to selected annotation; search for cluster annotation that contains this annotation
             CCHMapClusterAnnotation *mapClusterAnnotation = CCHMapClusterControllerClusterAnnotationForAnnotation(self.mapView, self.annotationToSelect, mapView.visibleMapRect);
-            self.annotationToSelect = nil;
+			
+			self.annotationToSelect = nil;
             
             if (CCHMapClusterControllerCoordinateEqualToCoordinate(self.mapView.centerCoordinate, mapClusterAnnotation.coordinate)) {
                 // Select immediately since region won't change
